@@ -1,0 +1,5 @@
+{
+  "buildCommand": "pnpm dev:prepare && pnpm prepack && nuxi build playground && mv playground/.vercel/output .vercel/output",
+  "installCommand": "pnpm install"
+}
+

@@ -65,7 +65,10 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
 
     // Apply the resolved CDN URL to Nuxt's application options.
     if (cdnUrl) {
-      nuxt.options.app = defu(nuxt.options.app, { cdnURL: cdnUrl })
+      // Nuxt resolves app.cdnURL before module setup and may have initialized it to ''.
+      // Assign directly so the generated URL also reaches runtimeConfig.app.cdnURL.
+      nuxt.options.app.cdnURL = cdnUrl
+      nuxt.options.runtimeConfig.app.cdnURL = cdnUrl
     }
 
     const publicConfig = getPublicConfig(config)

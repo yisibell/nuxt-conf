@@ -29,10 +29,6 @@ export const resolveCdnUrl = (
 ) => {
   const baseUrl = config.NUXT_APP_CDN_BASE_URL
 
-  if (!baseUrl) {
-    return config.NUXT_APP_CDN_URL
-  }
-
   const version = config.NUXT_APP_CDN_VERSION || createCdnVersion(
     rootDir,
     writeVersionFile ?? true,
@@ -40,6 +36,13 @@ export const resolveCdnUrl = (
   )
 
   config.NUXT_APP_CDN_VERSION = version
+
+  // Keep version generation independent from the CDN base URL so consumers can
+  // still use the version for cache-busting in environments without a CDN.
+  if (!baseUrl) {
+    return config.NUXT_APP_CDN_URL
+  }
+
   config.NUXT_APP_CDN_URL = withTrailingSlash(joinURL(baseUrl, version))
 
   return config.NUXT_APP_CDN_URL

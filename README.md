@@ -20,8 +20,14 @@ Define configuration once in `config/env`, then let nuxt-conf expose it through 
 ## Installation
 
 ~~~bash
-pnpm add nuxt-conf
+pnpm add nuxt-conf @nuxt/kit @nuxt/schema
 ~~~
+
+### 兼容性与依赖
+
+当前版本支持 Nuxt `>=3.16.0 <4.5`。`nuxt`、`@nuxt/kit` 和 `@nuxt/schema` 应保持同一 Nuxt 版本线，升级时请同步升级这三个依赖。
+
+`@nuxt/kit` 和 `@nuxt/schema` 是模块的 peer dependencies。即使它们通常会随 Nuxt 一起安装，使用 pnpm 等严格依赖解析方式时，建议在项目中显式声明，避免模块构建或类型解析失败。
 
 Register the module in `nuxt.config.ts`:
 
@@ -225,6 +231,14 @@ Defaults:
 ~~~
 
 ## TypeScript types
+
+模块会根据当前环境配置文件自动生成 Nuxt 类型声明，写入 Nuxt 的 `.nuxt` 类型目录。因此，环境配置中的字段可以直接获得 `useAppConfig()` 和 `useRuntimeConfig()` 的类型提示，不需要在业务项目中重复编写 `declare module`。
+
+重新生成类型：
+
+~~~bash
+pnpm nuxt prepare
+~~~
 
 The module exports the public types needed by consuming projects:
 

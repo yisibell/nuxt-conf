@@ -16,9 +16,8 @@ export default {
   },
 
   multiCache: {
+    private: true,
     routeCache: false,
-
-    componentCache: true,
   },
 
 } satisfies IEnvConfig

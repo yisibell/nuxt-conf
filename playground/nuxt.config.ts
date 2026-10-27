@@ -6,6 +6,7 @@ export default defineNuxtConfig({
     [
       '../src/module',
       {
+        injectRuntimeConfig: true,
         nuxtOptions: {
           proxy: 'proxy',
           multiCache: 'multiCache',

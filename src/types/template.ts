@@ -3,6 +3,7 @@ import { relative } from 'node:path'
 export const createConfigTypes = (
   configFile: string,
   buildDir: string,
+  injectRuntimeConfig = true,
 ) => {
   let configImport = relative(buildDir, configFile)
     .replaceAll('\\', '/')
@@ -12,11 +13,13 @@ export const createConfigTypes = (
     configImport = `./${configImport}`
   }
 
-  const runtimeConfigTypes = `  interface RuntimeConfig extends NuxtConfResolvedConfig {
+  const runtimeConfigTypes = `${injectRuntimeConfig
+    ? `  interface RuntimeConfig extends NuxtConfResolvedConfig {
     NUXT_APP_CDN_URL?: string
     NUXT_APP_CDN_VERSION?: string
     NUXT_APP_CDN_BASE_URL?: string
-  }
+  }`
+    : ''}
   interface AppConfig extends NuxtConfPublicConfig {
     NUXT_APP_CDN_URL?: string
     NUXT_APP_CDN_VERSION?: string

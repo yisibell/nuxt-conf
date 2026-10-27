@@ -19,15 +19,27 @@
           <div><span class="object-index">R</span><h3>runtimeConfig</h3></div>
           <code>useRuntimeConfig()</code>
         </div>
-        <pre>{{ runtimeConfigText }}</pre>
+        <ClientOnly>
+          <pre>{{ runtimeConfigText }}</pre>
+          <template #fallback><pre>{}</pre></template>
+        </ClientOnly>
       </article>
     </div>
   </section>
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
+import { useRuntimeConfig } from '#imports'
+
+const runtimeConfig = useRuntimeConfig()
+const runtimeConfigText = computed(() => JSON.stringify({ ...runtimeConfig }, null, 2))
+
+if (import.meta.dev) {
+  console.log(`[playground][${import.meta.server ? 'server' : 'client'}] runtimeConfig:`, { ...runtimeConfig })
+}
+
 defineProps<{
   appConfigText: string
-  runtimeConfigText: string
 }>()
 </script>

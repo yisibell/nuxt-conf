@@ -34,6 +34,8 @@ export interface NuxtConfModuleOptions {
   envVariable?: string
   /** Environment loaded when the selector is missing or unsupported. */
   defaultEnv?: string
+  /** Whether to inject the loaded configuration into Nuxt's runtimeConfig. Defaults to true. */
+  injectRuntimeConfig?: boolean
   /** CDN processing is enabled automatically when NUXT_APP_CDN_BASE_URL is configured. */
   cdn?: {
     /** Explicitly enable or disable CDN URL processing. */

@@ -25,6 +25,7 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
     configDir: 'config/env',
     envVariable: 'NUXT_APP_ENV',
     defaultEnv: 'development',
+    injectRuntimeConfig: true,
     cdn: {
       enabled: true,
       writeVersionFile: true,
@@ -34,6 +35,7 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
   },
 
   async setup(options, nuxt) {
+    // Select the environment-specific config file and fall back to the default environment.
     const resolver = createResolver(nuxt.options.rootDir)
     const environment = process.env[options.envVariable!] || options.defaultEnv!
     const configFile = resolver.resolve(options.configDir!, `env.${environment}.ts`)
@@ -47,8 +49,11 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
       return
     }
 
+    // Load the TypeScript config at build time so it can be shared by all integrations below.
     const jiti = createJiti(nuxt.options.rootDir)
     const config = await jiti.import<NuxtConfConfigObject>(selectedFile, { default: true })
+
+    // Resolve the CDN URL before injecting appConfig, because the resolver may enrich the config.
     const cdnUrl = options.cdn?.enabled === false
       ? undefined
       : resolveCdnUrl(
@@ -57,25 +62,21 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
           options.cdn?.writeVersionFile,
           options.cdn?.versionFileName,
         )
-    const publicConfig = getPublicConfig(config)
 
-    nuxt.options.appConfig = defu(nuxt.options.appConfig, publicConfig)
-    nuxt.options.runtimeConfig = defu(nuxt.options.runtimeConfig, config)
-
-    nuxt.hook('modules:done', () => {
-      addTypeTemplate({
-        filename: 'nuxt-conf.d.ts',
-        getContents: () => createConfigTypes(
-          selectedFile,
-          nuxt.options.buildDir,
-        ),
-      })
-    })
-
+    // Apply the resolved CDN URL to Nuxt's application options.
     if (cdnUrl) {
       nuxt.options.app = defu(nuxt.options.app, { cdnURL: cdnUrl })
     }
 
+    const publicConfig = getPublicConfig(config)
+
+    // Keep private values out of appConfig, while optionally exposing the complete config server-side.
+    nuxt.options.appConfig = defu(nuxt.options.appConfig, publicConfig)
+    if (options.injectRuntimeConfig !== false) {
+      nuxt.options.runtimeConfig = defu(nuxt.options.runtimeConfig, config)
+    }
+
+    // Map selected config paths to Nuxt or other module options without overwriting by default.
     for (const [targetPath, mapping] of Object.entries(options.nuxtOptions || {})) {
       const sourcePath = typeof mapping === 'string' ? mapping : mapping.from
       const override = typeof mapping === 'string' ? false : mapping.override === true
@@ -93,5 +94,17 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
         set(nuxt.options, targetPath, defu(currentValue, value))
       }
     }
+
+    // Register type declarations after all configuration and option mappings are complete.
+    nuxt.hook('modules:done', () => {
+      addTypeTemplate({
+        filename: 'nuxt-conf.d.ts',
+        getContents: () => createConfigTypes(
+          selectedFile,
+          nuxt.options.buildDir,
+          options.injectRuntimeConfig !== false,
+        ),
+      })
+    })
   },
 })

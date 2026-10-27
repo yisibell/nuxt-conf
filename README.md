@@ -10,7 +10,7 @@ Define configuration once in `config/env`, then let nuxt-conf expose it through 
 - Selects the environment with `NUXT_APP_ENV`
 - Falls back to the default environment when the selected file is missing
 - Injects non-private values into `appConfig`
-- Injects the complete configuration into the root `runtimeConfig`
+- Injects the complete configuration into the root `runtimeConfig` by default
 - Generates versioned CDN URLs with `ohash` and `ufo`
 - Writes `version.json` by default
 - Maps configuration values to Nuxt or other module options
@@ -87,7 +87,7 @@ appConfig.NUXT_APP_BASE_API
 appConfig.NUXT_APP_CDN_URL
 ~~~
 
-The complete configuration is merged into the root `runtimeConfig`:
+When `injectRuntimeConfig` is `true` (the default), the complete configuration is merged into the root `runtimeConfig`:
 
 ~~~ts
 const runtimeConfig = useRuntimeConfig()
@@ -97,7 +97,19 @@ runtimeConfig.NUXT_APP_BASE_API
 runtimeConfig.private
 ~~~
 
-A top-level object with `private: true` is excluded from `appConfig`, but remains in the root `runtimeConfig`. It is not moved under `runtimeConfig.public`.
+Disable this injection when the environment configuration should only be exposed through `appConfig` or used for Nuxt option mappings:
+
+~~~ts
+export default defineNuxtConfig({
+  modules: [
+    ['nuxt-conf', {
+      injectRuntimeConfig: false,
+    }],
+  ],
+})
+~~~
+
+A top-level object with `private: true` is excluded from `appConfig`, but remains in the root `runtimeConfig` when runtimeConfig injection is enabled. It is not moved under `runtimeConfig.public`.
 
 ## CDN handling
 
@@ -205,6 +217,7 @@ interface NuxtConfModuleOptions {
   configDir?: string
   envVariable?: string
   defaultEnv?: string
+  injectRuntimeConfig?: boolean
   cdn?: {
     enabled?: boolean
     writeVersionFile?: boolean
@@ -221,6 +234,7 @@ Defaults:
   configDir: 'config/env',
   envVariable: 'NUXT_APP_ENV',
   defaultEnv: 'development',
+  injectRuntimeConfig: true,
   cdn: {
     enabled: true,
     writeVersionFile: true,

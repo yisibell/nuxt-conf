@@ -1,65 +1,12 @@
-import { createResolver, defineNuxtModule, logger } from '@nuxt/kit'
+import { addTypeTemplate, createResolver, defineNuxtModule, logger } from '@nuxt/kit'
 import { defu } from 'defu'
 import { createJiti } from 'jiti'
 import { get, isPlainObject, set } from 'lodash-es'
-import { existsSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { hash } from 'ohash'
-import { joinURL, withTrailingSlash } from 'ufo'
+import { existsSync } from 'node:fs'
+import { getPublicConfig } from './config/public'
+import { resolveCdnUrl } from './cdn/resolve'
+import { createConfigTypes } from './types/template'
 import type { NuxtConfConfigObject, NuxtConfModuleOptions } from './types'
-
-const getPublicConfig = (config: NuxtConfConfigObject) => {
-  const publicConfig: NuxtConfConfigObject = {}
-
-  for (const [key, value] of Object.entries(config)) {
-    if (!isPlainObject(value) || value.private !== true) {
-      publicConfig[key] = value
-    }
-  }
-
-  return publicConfig
-}
-
-const createCdnVersion = (
-  rootDir: string,
-  createVersionFile: boolean,
-  versionFileName: string,
-) => {
-  const version = hash({ date: +new Date() }).toLowerCase().slice(0, 10)
-
-  if (createVersionFile) {
-    writeFileSync(
-      resolve(rootDir, versionFileName),
-      JSON.stringify({ version }),
-    )
-  }
-
-  return version
-}
-
-const resolveCdnUrl = (
-  config: NuxtConfConfigObject,
-  rootDir: string,
-  writeVersionFile?: boolean,
-  versionFileName = 'version.json',
-) => {
-  const baseUrl = config.NUXT_APP_CDN_BASE_URL
-
-  if (!baseUrl) {
-    return config.NUXT_APP_CDN_URL
-  }
-
-  const version = config.NUXT_APP_CDN_VERSION || createCdnVersion(
-    rootDir,
-    writeVersionFile ?? true,
-    versionFileName,
-  )
-
-  config.NUXT_APP_CDN_VERSION = version
-  config.NUXT_APP_CDN_URL = withTrailingSlash(joinURL(baseUrl, version))
-
-  return config.NUXT_APP_CDN_URL
-}
 
 export type {
   NuxtConfConfigObject,
@@ -87,24 +34,19 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
   },
 
   async setup(options, nuxt) {
-    // Resolve environment configuration files from the consuming Nuxt project.
     const resolver = createResolver(nuxt.options.rootDir)
     const environment = process.env[options.envVariable!] || options.defaultEnv!
     const configFile = resolver.resolve(options.configDir!, `env.${environment}.ts`)
     const fallbackFile = resolver.resolve(options.configDir!, `env.${options.defaultEnv}.ts`)
-
-    // Fall back to the default environment when the selected file is missing.
     const selectedFile = existsSync(configFile) ? configFile : fallbackFile
 
     if (!existsSync(selectedFile)) {
-      // Allow module build tooling and projects without environment files to initialize.
       logger.warn(
         `[nuxt-conf] No environment config found. Tried ${configFile} and ${fallbackFile}. Skipping configuration loading.`,
       )
       return
     }
 
-    // Use Jiti so the project can keep its environment configuration in TypeScript.
     const jiti = createJiti(nuxt.options.rootDir)
     const config = await jiti.import<NuxtConfConfigObject>(selectedFile, { default: true })
     const cdnUrl = options.cdn?.enabled === false
@@ -115,32 +57,40 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
           options.cdn?.writeVersionFile,
           options.cdn?.versionFileName,
         )
-
-    // Expose non-private values through appConfig while keeping the full config available on runtimeConfig.
     const publicConfig = getPublicConfig(config)
 
     nuxt.options.appConfig = defu(nuxt.options.appConfig, publicConfig)
     nuxt.options.runtimeConfig = defu(nuxt.options.runtimeConfig, config)
 
+    nuxt.hook('modules:done', () => {
+      addTypeTemplate({
+        filename: 'nuxt-conf.d.ts',
+        getContents: () => createConfigTypes(
+          selectedFile,
+          nuxt.options.buildDir,
+        ),
+      })
+    })
+
     if (cdnUrl) {
       nuxt.options.app = defu(nuxt.options.app, { cdnURL: cdnUrl })
     }
 
-    // Map selected environment values to Nuxt or other module options.
     for (const [targetPath, mapping] of Object.entries(options.nuxtOptions || {})) {
       const sourcePath = typeof mapping === 'string' ? mapping : mapping.from
       const override = typeof mapping === 'string' ? false : mapping.override === true
       const value = get(config, sourcePath)
+      const currentValue = get(nuxt.options, targetPath)
 
-      if (value !== undefined) {
-        const currentValue = get(nuxt.options, targetPath)
+      if (value === undefined) {
+        continue
+      }
 
-        if (override || currentValue === undefined) {
-          set(nuxt.options, targetPath, value)
-        }
-        else if (isPlainObject(currentValue) && isPlainObject(value)) {
-          set(nuxt.options, targetPath, defu(currentValue, value))
-        }
+      if (override || currentValue === undefined) {
+        set(nuxt.options, targetPath, value)
+      }
+      else if (isPlainObject(currentValue) && isPlainObject(value)) {
+        set(nuxt.options, targetPath, defu(currentValue, value))
       }
     }
   },

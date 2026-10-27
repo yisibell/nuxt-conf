@@ -22,6 +22,10 @@ export default defineNuxtConfig({
     job_host_name: getJobConfHostName(),
   },
 
+  runtimeConfig: {
+    some_custom_key: 1,
+  },
+
   compatibilityDate: '2024-12-30',
 
 })

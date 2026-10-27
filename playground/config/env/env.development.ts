@@ -1,3 +1,5 @@
+import type { IEnvConfig } from '../index'
+
 export default {
   NUXT_APP_ENV: 'development',
   NUXT_APP_BASE_API: '/api',
@@ -11,4 +13,10 @@ export default {
       },
     ],
   },
-}
+  multiCache: {
+    private: true,
+    debug: true,
+    routeCache: false,
+  },
+
+} satisfies IEnvConfig

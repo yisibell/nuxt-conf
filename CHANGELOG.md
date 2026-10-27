@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.3.1
+
+[compare changes](https://github.com/yisibell/nuxt-conf/compare/v1.3.0...v1.3.1)
+
+### 🩹 Fixes
+
+- Fix types and `cdnURL` sets ([f5576a5](https://github.com/yisibell/nuxt-conf/commit/f5576a5))
+
+### ❤️ Contributors
+
+- Wenqing <wenqing@kerrylan.com>
+
 ## v1.3.0
 
 [compare changes](https://github.com/yisibell/nuxt-conf/compare/v1.2.0...v1.3.0)

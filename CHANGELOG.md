@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.2.0
+
+[compare changes](https://github.com/yisibell/nuxt-conf/compare/v1.1.0...v1.2.0)
+
+### 🚀 Enhancements
+
+- Supports auto imports types ([146a972](https://github.com/yisibell/nuxt-conf/commit/146a972))
+
+### ❤️ Contributors
+
+- Wenqing <wenqing@kerrylan.com>
+
 ## v1.1.0
 
 

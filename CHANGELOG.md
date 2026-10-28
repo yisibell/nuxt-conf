@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.0.0
+
+[compare changes](https://github.com/yisibell/nuxt-conf/compare/v1.3.1...v2.0.0)
+
+### 🚀 Enhancements
+
+- ⚠️  Supports upload static files to aws s3 ([3a0e57d](https://github.com/yisibell/nuxt-conf/commit/3a0e57d))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Supports upload static files to aws s3 ([3a0e57d](https://github.com/yisibell/nuxt-conf/commit/3a0e57d))
+
+### ❤️ Contributors
+
+- Wenqing <wenqing@kerrylan.com>
+
 ## v1.3.1
 
 [compare changes](https://github.com/yisibell/nuxt-conf/compare/v1.3.0...v1.3.1)

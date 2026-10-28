@@ -11,6 +11,15 @@ export default defineNuxtConfig({
           proxy: 'proxy',
           multiCache: 'multiCache',
         },
+        upload: {
+          enabled: false,
+          publish: {
+            options: {
+              simulate: true,
+            },
+          },
+          reporter: true,
+        },
       },
     ],
   ],

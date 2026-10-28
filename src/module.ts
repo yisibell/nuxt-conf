@@ -3,14 +3,18 @@ import { defu } from 'defu'
 import { createJiti } from 'jiti'
 import { get, isPlainObject, set } from 'lodash-es'
 import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { getPublicConfig } from './config/public'
 import { resolveCdnUrl } from './cdn/resolve'
 import { createConfigTypes } from './types/template'
+import { uploadBuildOutput } from './upload/s3'
 import type { NuxtConfConfigObject, NuxtConfModuleOptions } from './types'
 
 export type {
   NuxtConfConfigObject,
   NuxtConfModuleOptions,
+  NuxtConfS3Config,
+  NuxtConfUploadOptions,
   NuxtConfValue,
   NuxtConfOptionMapping,
 } from './types'
@@ -30,6 +34,11 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
       enabled: true,
       writeVersionFile: true,
       versionFileName: 'version.json',
+    },
+    upload: {
+      enabled: false,
+      configFile: 'awspublish.config.cjs',
+      keyPrefix: 'nuxt/pc',
     },
     nuxtOptions: {},
   },
@@ -109,5 +118,28 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
         ),
       })
     })
+
+    if (options.upload?.enabled && !nuxt.options.dev) {
+      // Upload only after Nitro has finished producing the public build output.
+      nuxt.hook('build:done', async () => {
+        logger.start(`[nuxt-conf] Uploading S3 static assets [${environment}]`)
+
+        try {
+          await uploadBuildOutput({
+            rootDir: nuxt.options.rootDir,
+            environment,
+            upload: options.upload!,
+            outputDir: nuxt.options.nitro?.output?.publicDir
+              ?? resolve(nuxt.options.rootDir, options.upload?.outputDir ?? '.output/public'),
+            versionFileName: options.cdn?.versionFileName ?? 'version.json',
+          })
+          logger.success(`[nuxt-conf] S3 static assets uploaded [${environment}]`)
+        }
+        catch (error) {
+          logger.error('[nuxt-conf] S3 static asset upload failed:', error)
+          throw error
+        }
+      })
+    }
   },
 })

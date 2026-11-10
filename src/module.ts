@@ -5,7 +5,7 @@ import { get, isPlainObject, set } from 'lodash-es'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { getPublicConfig } from './config/public'
-import { resolveCdnUrl } from './cdn/resolve'
+import { createCdnVersion, resolveCdnUrl, writeCdnVersionFile } from './cdn/resolve'
 import { createConfigTypes } from './types/template'
 import { uploadBuildOutput } from './upload/s3'
 import type { NuxtConfConfigObject, NuxtConfModuleOptions } from './types'
@@ -35,6 +35,8 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
       writeVersionFile: true,
       versionFileName: 'version.json',
     },
+    injectSentryRelease: false,
+    sentryReleasePath: 'sentry.release.name',
     upload: {
       enabled: false,
       configFile: 'awspublish.config.cjs',
@@ -63,21 +65,35 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
     const config = await jiti.import<NuxtConfConfigObject>(selectedFile, { default: true })
 
     // Resolve the CDN URL before injecting appConfig, because the resolver may enrich the config.
-    const cdnUrl = options.cdn?.enabled === false
+    const resolvedCdn = options.cdn?.enabled === false
       ? undefined
-      : resolveCdnUrl(
-          config,
+      : resolveCdnUrl(config, createCdnVersion(Date.now()))
+
+    if (resolvedCdn) {
+      config.NUXT_APP_CDN_VERSION = resolvedCdn.version
+      config.NUXT_APP_CDN_URL = resolvedCdn.cdnUrl
+
+      if (options.cdn?.writeVersionFile ?? true) {
+        writeCdnVersionFile(
           nuxt.options.rootDir,
-          options.cdn?.writeVersionFile,
-          options.cdn?.versionFileName,
+          resolvedCdn.version,
+          options.cdn?.versionFileName ?? 'version.json',
         )
+      }
+    }
 
     // Apply the resolved CDN URL to Nuxt's application options.
-    if (cdnUrl) {
+    if (resolvedCdn?.cdnUrl) {
       // Nuxt resolves app.cdnURL before module setup and may have initialized it to ''.
       // Assign directly so the generated URL also reaches runtimeConfig.app.cdnURL.
-      nuxt.options.app.cdnURL = cdnUrl
-      nuxt.options.runtimeConfig.app.cdnURL = cdnUrl
+      nuxt.options.app.cdnURL = resolvedCdn.cdnUrl
+      nuxt.options.runtimeConfig.app.cdnURL = resolvedCdn.cdnUrl
+    }
+
+    if (options.injectSentryRelease && resolvedCdn?.version && options.sentryReleasePath) {
+      const sentryReleasePath = options.sentryReleasePath
+
+      set(nuxt.options, sentryReleasePath, resolvedCdn.version)
     }
 
     const publicConfig = getPublicConfig(config)

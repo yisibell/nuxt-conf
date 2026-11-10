@@ -7,6 +7,7 @@ export default defineNuxtConfig({
       '../src/module',
       {
         injectRuntimeConfig: true,
+        injectSentryRelease: true,
         nuxtOptions: {
           proxy: 'proxy',
           multiCache: 'multiCache',
@@ -22,6 +23,9 @@ export default defineNuxtConfig({
         },
       },
     ],
+
+    '~/modules/print-nuxt-options',
+
   ],
 
   css: [

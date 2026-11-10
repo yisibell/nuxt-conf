@@ -91,6 +91,10 @@ export interface NuxtConfModuleOptions {
     /** Version file name written to the project root. Defaults to version.json. */
     versionFileName?: string
   }
+  /** Inject the resolved CDN version into nuxt.options.sentry.release.name. Defaults to false. */
+  injectSentryRelease?: boolean
+  /** Target Nuxt option path for the injected Sentry release. Defaults to sentry.release.name. */
+  sentryReleasePath?: string
   upload?: NuxtConfUploadOptions
   /** Target nuxt.options path -> source config path. */
   nuxtOptions?: Record<string, string | NuxtConfOptionMapping>

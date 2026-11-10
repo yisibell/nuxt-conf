@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v2.1.0
+
+[compare changes](https://github.com/yisibell/nuxt-conf/compare/v2.0.0...v2.1.0)
+
+### 🚀 Enhancements
+
+- Supports inject cdn version to sentry release ([1f59144](https://github.com/yisibell/nuxt-conf/commit/1f59144))
+
+### ❤️ Contributors
+
+- Wenqing <wenqing@kerrylan.com>
+
 ## v2.0.0
 
 [compare changes](https://github.com/yisibell/nuxt-conf/compare/v1.3.1...v2.0.0)

@@ -13,6 +13,7 @@ Define configuration once in `config/env`, then let nuxt-conf expose it through 
 - Injects the complete configuration into the root `runtimeConfig` by default
 - Generates versioned CDN URLs with `ohash` and `ufo`
 - Writes `version.json` by default
+- Can inject the resolved CDN version into `sentry.release.name`
 - Maps configuration values to Nuxt or other module options
 - Supports project-specific TypeScript types
 - Works as a standalone, publishable Nuxt module
@@ -158,6 +159,27 @@ export default defineNuxtConfig({
 })
 ~~~
 
+When `NUXT_APP_CDN_VERSION` is provided by the selected environment configuration, the module reuses that version and still writes it to `version.json` when `cdn.writeVersionFile` is enabled.
+
+To inject the resolved CDN version into the Sentry Nuxt module configuration, enable `injectSentryRelease`:
+
+~~~ts
+export default defineNuxtConfig({
+  modules: [
+    [
+      'nuxt-conf',
+      {
+        injectSentryRelease: true,
+      },
+    ],
+  ],
+})
+~~~
+
+When enabled, this sets `nuxt.options.sentry.release.name` to the resolved CDN version. It overwrites the value at the configured target path. The option defaults to `false`.
+
+The target option path can be customized with `sentryReleasePath`; it defaults to `sentry.release.name`.
+
 Disable CDN processing completely:
 
 ~~~ts
@@ -268,6 +290,8 @@ Existing Nuxt values take precedence by default. Object values are merged with `
 | `envVariable` | `string` | `'NUXT_APP_ENV'` | Environment variable used to select the environment. |
 | `defaultEnv` | `string` | `'development'` | Fallback environment when the selected environment is unavailable. |
 | `injectRuntimeConfig` | `boolean` | `true` | Inject the loaded configuration into Nuxt `runtimeConfig`. |
+| `injectSentryRelease` | `boolean` | `false` | Inject the resolved CDN version into the configured Sentry release option path. |
+| `sentryReleasePath` | `string` | `'sentry.release.name'` | Nuxt option path that receives the resolved CDN version. |
 | `cdn.enabled` | `boolean` | `true` | Enable or disable CDN URL processing. |
 | `cdn.writeVersionFile` | `boolean` | `true` | Write the generated version file. |
 | `cdn.versionFileName` | `string` | `'version.json'` | Version file path relative to the project root. |

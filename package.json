@@ -1,6 +1,6 @@
 {
   "name": "nuxt-conf",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Load environment-specific TypeScript configuration into Nuxt appConfig, runtimeConfig, and module options.",
   "keywords": [
     "config",

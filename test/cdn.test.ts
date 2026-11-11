@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { resolveCdnUrl, writeCdnVersionFile } from '../src/cdn/resolve'
+import { resolveCdnUrl } from '../src/cdn/resolve'
+import { loadVersionFile, writeVersionFile } from '../src/version/resolve'
 
 describe('resolveCdnUrl', () => {
   it('generates a version without a CDN base URL', () => {
@@ -49,9 +50,68 @@ describe('resolveCdnUrl', () => {
     const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-conf-'))
 
     try {
-      writeCdnVersionFile(rootDir, 'fixed-version')
+      writeVersionFile('fixed-version', {
+        rootDir,
+      })
 
       expect(JSON.parse(readFileSync(join(rootDir, 'version.json'), 'utf8'))).toEqual({
+        version: 'fixed-version',
+      })
+    }
+    finally {
+      rmSync(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it('writes the Sentry release to the version file when provided', () => {
+    const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-conf-'))
+
+    try {
+      writeVersionFile('fixed-version', {
+        rootDir,
+        versionFileName: 'version.json',
+        sentryRelease: 'project@2026.11.12+123',
+      })
+
+      expect(JSON.parse(readFileSync(join(rootDir, 'version.json'), 'utf8'))).toEqual({
+        version: 'fixed-version',
+        sentryRelease: 'project@2026.11.12+123',
+      })
+    }
+    finally {
+      rmSync(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it('loads the complete version file object', () => {
+    const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-conf-'))
+
+    try {
+      writeVersionFile('fixed-version', {
+        rootDir,
+        sentryRelease: 'project@2026.11.12+123',
+      })
+
+      expect(loadVersionFile('version.json', { rootDir })).toEqual({
+        version: 'fixed-version',
+        sentryRelease: 'project@2026.11.12+123',
+      })
+    }
+    finally {
+      rmSync(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it('creates parent directories for a custom version file path', () => {
+    const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-conf-'))
+
+    try {
+      writeVersionFile('fixed-version', {
+        rootDir,
+        versionFileName: 'meta/build/version.json',
+      })
+
+      expect(loadVersionFile('meta/build/version.json', { rootDir })).toEqual({
         version: 'fixed-version',
       })
     }

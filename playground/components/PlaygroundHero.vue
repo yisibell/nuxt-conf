@@ -6,10 +6,6 @@
         <span class="brand-mark">N</span>
         <span>nuxt-conf</span>
       </div>
-      <div class="topbar-meta">
-        <span class="version">v1.0.0</span>
-        <span class="availability"><i /> Playground</span>
-      </div>
     </header>
 
     <div class="hero-content">

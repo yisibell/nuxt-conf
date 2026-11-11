@@ -1,5 +1,3 @@
-import { writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { hash } from 'ohash'
 import { joinURL, withTrailingSlash } from 'ufo'
 import type { NuxtConfConfigObject } from '../types'
@@ -7,17 +5,6 @@ import type { NuxtConfConfigObject } from '../types'
 export interface ResolvedCdn {
   version: string
   cdnUrl?: string
-}
-
-export const writeCdnVersionFile = (
-  rootDir: string,
-  version: string,
-  versionFileName = 'version.json',
-) => {
-  writeFileSync(
-    resolve(rootDir, versionFileName),
-    JSON.stringify({ version }),
-  )
 }
 
 export const createCdnVersion = (timestamp: number) => hash({ date: timestamp }).toLowerCase().slice(0, 10)

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import gulp from 'gulp'
@@ -9,6 +9,7 @@ import type {
   NuxtConfUploadOptions,
   NuxtConfUploadState,
 } from '../types'
+import { loadVersionFile } from '../version/resolve'
 
 type Publisher = ReturnType<typeof awspublish.create>
 
@@ -29,7 +30,15 @@ interface UploadBuildContext {
   versionFileName: string
 }
 
-const loadConfigFile = async (rootDir: string, configFile: string, environment: string) => {
+interface LoadConfigFileOptions {
+  rootDir: string
+  environment: string
+}
+
+const loadConfigFile = async (
+  configFile: string,
+  { rootDir, environment }: LoadConfigFileOptions,
+) => {
   // Keep deployment credentials in the project-provided config file rather than Nuxt runtime config.
   const configPath = resolve(rootDir, configFile)
 
@@ -47,23 +56,6 @@ const loadConfigFile = async (rootDir: string, configFile: string, environment: 
   }
 
   return config
-}
-
-const loadVersion = (rootDir: string, versionFileName: string) => {
-  // The CDN integration creates this file, so uploads use the exact same version as the CDN URL.
-  const versionPath = resolve(rootDir, versionFileName)
-
-  if (!existsSync(versionPath)) {
-    throw new Error(`Version file does not exist: ${versionPath}`)
-  }
-
-  const version = JSON.parse(readFileSync(versionPath, 'utf8')).version
-
-  if (!version || typeof version !== 'string') {
-    throw new Error(`Version file does not contain a valid version: ${versionPath}`)
-  }
-
-  return version
 }
 
 const createPublisher = (config: NuxtConfS3Config): Publisher => {
@@ -97,21 +89,17 @@ export async function uploadBuildOutput({
   outputDir,
   versionFileName,
 }: UploadBuildContext) {
-  const config = await loadConfigFile(
+  const config = await loadConfigFile(upload.configFile ?? 'awspublish.config.cjs', {
     rootDir,
-    upload.configFile ?? 'awspublish.config.cjs',
     environment,
-  )
+  })
 
   if (!config.enabled) {
     return
   }
 
   const sourceDir = resolve(outputDir)
-  const version = loadVersion(
-    rootDir,
-    versionFileName,
-  )
+  const { version } = loadVersionFile(versionFileName, { rootDir })
   const publisher = createPublisher(config)
   const keyPrefix = upload.keyPrefix ?? 'nuxt/pc'
   const publishHeaders = {

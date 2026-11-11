@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v3.0.1
+
+[compare changes](https://github.com/yisibell/nuxt-conf/compare/v3.0.0...v3.0.1)
+
+### 🩹 Fixes
+
+- **types:** Export types ([4c50414](https://github.com/yisibell/nuxt-conf/commit/4c50414))
+
+### ❤️ Contributors
+
+- Wenqing <wenqing@kerrylan.com>
+
 ## v3.0.0
 
 [compare changes](https://github.com/yisibell/nuxt-conf/compare/v2.1.0...v3.0.0)

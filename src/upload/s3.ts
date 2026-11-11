@@ -9,7 +9,7 @@ import type {
   NuxtConfUploadOptions,
   NuxtConfUploadState,
 } from '../types'
-import { loadVersionFile } from '../version/resolve'
+import { loadVersionFile } from '../runtime/version'
 
 type Publisher = ReturnType<typeof awspublish.create>
 

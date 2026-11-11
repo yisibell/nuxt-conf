@@ -8,9 +8,6 @@ import { registerUploadHook } from './hooks/upload'
 import { writeVersionFile } from './version/resolve'
 import type { NuxtConfModuleOptions } from './types'
 
-export { loadVersionFile } from './version/resolve'
-export type { LoadVersionFileOptions, NuxtConfVersionFile } from './version/resolve'
-
 export type {
   NuxtConfConfigObject,
   NuxtConfModuleOptions,

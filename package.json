@@ -39,6 +39,10 @@
       "types": "./dist/module.d.mts",
       "default": "./dist/module.mjs"
     },
+    "./version": {
+      "types": "./dist/runtime/version.d.ts",
+      "default": "./dist/runtime/version.js"
+    },
     "./*": [
       "./*",
       "./*.d.ts"
@@ -82,12 +86,11 @@
     "nuxt": "3.16.0",
     "sass": "1.101.7",
     "typescript": "^5.8.3",
-    "vitest": "^3.0.3",
-    "vue-tsc": "^2.2.0"
+    "vitest": "^3.0.3"
   },
   "peerDependencies": {
-    "nuxt": ">=3.16.0 <4.5",
     "@nuxt/kit": ">=3.16.0 <4.5",
-    "@nuxt/schema": ">=3.16.0 <4.5"
+    "@nuxt/schema": ">=3.16.0 <4.5",
+    "nuxt": ">=3.16.0 <4.5"
   }
 }

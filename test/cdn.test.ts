@@ -3,7 +3,8 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { resolveCdnUrl } from '../src/cdn/resolve'
-import { loadVersionFile, writeVersionFile } from '../src/version/resolve'
+import { loadVersionFile } from '../src/runtime/version'
+import { writeVersionFile } from '../src/version/resolve'
 
 describe('resolveCdnUrl', () => {
   it('generates a version without a CDN base URL', () => {

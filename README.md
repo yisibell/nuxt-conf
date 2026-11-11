@@ -139,7 +139,7 @@ Generated file:
 The generated version file can also be loaded through the public API. The function returns the complete parsed object and is intended for Node.js, server-side, or build-time use:
 
 ~~~ts
-import { loadVersionFile } from 'nuxt-conf'
+import { loadVersionFile } from 'nuxt-conf/version'
 
 const versionFile = loadVersionFile('version.json', {
   rootDir: process.cwd(),

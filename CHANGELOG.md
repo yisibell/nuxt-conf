@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v3.0.0
+
+[compare changes](https://github.com/yisibell/nuxt-conf/compare/v2.1.0...v3.0.0)
+
+### 🚀 Enhancements
+
+- ⚠️  Add build version and sentry release management ([08acd87](https://github.com/yisibell/nuxt-conf/commit/08acd87))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Add build version and sentry release management ([08acd87](https://github.com/yisibell/nuxt-conf/commit/08acd87))
+
+### ❤️ Contributors
+
+- Wenqing <wenqing@kerrylan.com>
+
 ## v2.1.0
 
 [compare changes](https://github.com/yisibell/nuxt-conf/compare/v2.0.0...v2.1.0)

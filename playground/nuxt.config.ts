@@ -8,6 +8,9 @@ export default defineNuxtConfig({
       {
         injectRuntimeConfig: true,
         injectSentryRelease: true,
+        sentryReleaseMode: 'sentry-release',
+        writeVersionFile: true,
+        versionFileName: 'version.json',
         nuxtOptions: {
           proxy: 'proxy',
           multiCache: 'multiCache',

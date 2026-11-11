@@ -88,26 +88,6 @@ body {
   font-size: 13px;
   font-weight: 800;
 }
-.topbar-meta {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-.version {
-  color: #777684;
-}
-.availability {
-  color: #a7e2bd;
-}
-.availability i {
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  margin-right: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  vertical-align: 1px;
-}
 .hero-content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(390px, 500px);
@@ -493,9 +473,6 @@ h2 em {
   .content-section,
   .site-footer {
     width: min(100% - 32px, 480px);
-  }
-  .topbar-meta .version {
-    display: none;
   }
   .hero-section {
     min-height: auto;

@@ -9,6 +9,8 @@ export type NuxtConfConfigObject<T extends object = Record<string, any>> = T & {
   NUXT_APP_CDN_URL?: string
   /** Version segment used when building the resolved CDN URL. */
   NUXT_APP_CDN_VERSION?: string
+  /** Release identifier generated for Sentry. */
+  NUXT_APP_SENTRY_RELEASE?: string
   /** Base CDN URL used to generate NUXT_APP_CDN_URL. */
   NUXT_APP_CDN_BASE_URL?: string
 } & Record<string, any>
@@ -86,13 +88,17 @@ export interface NuxtConfModuleOptions {
   cdn?: {
     /** Explicitly enable or disable CDN URL processing. */
     enabled?: boolean
-    /** Whether to write the generated version file. Defaults to true. */
-    writeVersionFile?: boolean
-    /** Version file name written to the project root. Defaults to version.json. */
-    versionFileName?: string
   }
-  /** Inject the resolved CDN version into nuxt.options.sentry.release.name. Defaults to false. */
+  /** Whether to write the generated version file. Defaults to true. */
+  writeVersionFile?: boolean
+  /** Version file name written to the project root. Defaults to version.json. */
+  versionFileName?: string
+  /** Inject a generated Sentry release into nuxt.options.sentry.release.name. Defaults to false. */
   injectSentryRelease?: boolean
+  /** Release value source. Defaults to the generated Sentry release. */
+  sentryReleaseMode?: 'cdn-version' | 'sentry-release'
+  /** Project name used by the sentry-release mode. Defaults to package.json name. */
+  sentryReleaseProject?: string
   /** Target Nuxt option path for the injected Sentry release. Defaults to sentry.release.name. */
   sentryReleasePath?: string
   upload?: NuxtConfUploadOptions

@@ -12,8 +12,8 @@ Define configuration once in `config/env`, then let nuxt-conf expose it through 
 - Injects non-private values into `appConfig`
 - Injects the complete configuration into the root `runtimeConfig` by default
 - Generates versioned CDN URLs with `ohash` and `ufo`
-- Writes `version.json` by default
-- Can inject the resolved CDN version into `sentry.release.name`
+- Writes build version metadata to `version.json` by default
+- Supports configurable Sentry releases and can inject them into `sentry.release.name`
 - Maps configuration values to Nuxt or other module options
 - Supports project-specific TypeScript types
 - Works as a standalone, publishable Nuxt module

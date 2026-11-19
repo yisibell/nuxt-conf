@@ -84,6 +84,31 @@ describe('resolveCdnUrl', () => {
     }
   })
 
+  it('writes public config by default and includes private config only when requested', () => {
+    const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-conf-'))
+    const config = {
+      apiUrl: 'https://example.com',
+      secret: { private: true, token: 'secret-token' },
+    }
+
+    try {
+      writeVersionFile('fixed-version', { rootDir, config })
+      expect(JSON.parse(readFileSync(join(rootDir, 'version.json'), 'utf8'))).toEqual({
+        version: 'fixed-version',
+        config: { apiUrl: 'https://example.com' },
+      })
+
+      writeVersionFile('fixed-version', { rootDir, config, includePrivateConfig: true })
+      expect(JSON.parse(readFileSync(join(rootDir, 'version.json'), 'utf8'))).toEqual({
+        version: 'fixed-version',
+        config,
+      })
+    }
+    finally {
+      rmSync(rootDir, { recursive: true, force: true })
+    }
+  })
+
   it('loads the complete version file object', () => {
     const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-conf-'))
 

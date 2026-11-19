@@ -1,4 +1,4 @@
-import type { IEnvConfig } from '../index'
+import type { NuxtConfEnvConfig } from './env.types'
 
 export default {
   NUXT_APP_ENV: 'ft',
@@ -20,4 +20,4 @@ export default {
     routeCache: false,
   },
 
-} satisfies IEnvConfig
+} satisfies Partial<NuxtConfEnvConfig>

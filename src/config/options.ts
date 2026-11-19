@@ -20,7 +20,7 @@ export interface ApplyNuxtOptionsOptions {
  * @param options.mappings Source-to-target mappings.
  */
 export const applyNuxtOptions = (
-  config: NuxtConfConfigObject,
+  config: NuxtConfConfigObject<Record<string, any>>,
   { target, mappings = {} }: ApplyNuxtOptionsOptions,
 ) => {
   for (const [targetPath, mapping] of Object.entries(mappings)) {

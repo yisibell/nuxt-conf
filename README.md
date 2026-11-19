@@ -6,7 +6,7 @@ Define configuration once in `config/env`, then let nuxt-conf expose it through 
 
 ## Features
 
-- Loads `config/env/env.<environment>.ts`
+- Loads and merges environment, default, and local configuration layers
 - Selects the environment with `NUXT_APP_ENV`
 - Falls back to the default environment when the selected file is missing
 - Injects non-private values into `appConfig`
@@ -47,9 +47,11 @@ The default directory is `config/env`:
 ~~~text
 config/
 └── env/
-    ├── env.development.ts
-    ├── env.ft.ts
-    └── env.production.ts
+    ├── env.default.ts
+    ├── env.local.ts
+    ├── env.production.default.ts
+    ├── env.production.ts
+    └── env.production.local.ts
 ~~~
 
 A configuration file can export any object:
@@ -74,7 +76,31 @@ The active file is selected with `NUXT_APP_ENV`:
 NUXT_APP_ENV=production pnpm build
 ~~~
 
-If the selected file is not found, the module tries the configured default environment. If no environment file exists, it emits a warning and skips configuration loading.
+For `NUXT_APP_ENV=production`, layers are merged with `defu` in this precedence order: `env.production.local.ts`, `env.local.ts`, `env.production.ts`, `env.production.default.ts`, then `env.default.ts`. Missing files are skipped. If the selected environment has no environment-specific files, the module merges the `defaultEnv` layers with the global layers. When the environment variable is unset, `defaultEnv` is selected directly. If no applicable files exist, the module emits a warning and skips configuration loading.
+
+Layers are merged in the listed order, with each layer supplying defaults for the accumulated configuration:
+
+- Higher priority values win when the values are scalars or of different types. Values such as `false`, `0`, and `''` count as set.
+- When both values are plain objects, their properties are merged recursively.
+- When both values are arrays, they are concatenated with the higher priority items first. For example, `['local']` and `['default']` become `['local', 'default']`.
+- A missing, `null`, or `undefined` value can fall back to a value from a lower priority layer.
+
+The merge helper is also available as `import { mergeEnvConfig } from 'nuxt-conf/core'` and applies the same merge rules to configuration objects keyed by their filename suffix, such as `production`, `production.local`, `production.default`, `local`, and `default`.
+
+### Prefer a Node environment variable
+
+In the playground, `env.development.ts` sets `enumKey` to `'bar'`. The higher priority `env.development.local.ts` reads `ENUM_KEY` from the Node process:
+
+~~~ts
+// playground/config/env/env.development.local.ts
+import type { NuxtConfEnvConfig } from './env.types'
+
+export default {
+  enumKey: process.env.ENUM_KEY as NuxtConfEnvConfig['enumKey'],
+} satisfies Partial<NuxtConfEnvConfig>
+~~~
+
+Set `ENUM_KEY=foo` when starting the playground or building it to use `'foo'`. Leave it unset and `defu` will fill in `'bar'` from `env.development.ts`. An empty string still takes precedence. The type assertion does not validate the environment variable at runtime.
 
 ## Configuration output
 
@@ -125,6 +151,8 @@ The version is generated with `ohash` and truncated to 10 characters. The resolv
 
 By default, the module writes the generated version to `version.json`.
 
+Set `writeConfigToVersionFile: true` to include the resolved configuration under the `config` field. By default, top-level entries marked with `private: true` are omitted. Set `writePrivateConfigToVersionFile: true` to include those entries as well.
+
 Generated file:
 
 ~~~json
@@ -147,6 +175,28 @@ const versionFile = loadVersionFile('version.json', {
 
 versionFile.version
 versionFile.sentryRelease
+~~~
+
+To read only the stored `config` object, use `loadConfigSnapshot`. It returns `{}` if the version file cannot be read or parsed, or if it does not contain a valid `version` and `config` object.
+
+Pass the expected config type as a generic argument to get typed fields. The result is `Partial<T>` because fields may be missing. The type argument does not validate field values at runtime.
+
+~~~ts
+import { loadConfigSnapshot } from 'nuxt-conf/version'
+
+const config = loadConfigSnapshot<{ enumKey: 'foo' | 'bar' }>('version.json', {
+  rootDir: process.cwd(),
+})
+~~~
+
+To read only `sentryRelease`, use `loadSentryRelease`. It returns `undefined` if the version file cannot be loaded or the field is missing or is not a string.
+
+~~~ts
+import { loadSentryRelease } from 'nuxt-conf/version'
+
+const sentryRelease = loadSentryRelease('version.json', {
+  rootDir: process.cwd(),
+})
 ~~~
 
 Customize or disable the version file:
@@ -319,6 +369,8 @@ Existing Nuxt values take precedence by default. Object values are merged with `
 | `sentryReleasePath` | `string` | `'sentry.release.name'` | Nuxt option path that receives the generated Sentry release. |
 | `cdn.enabled` | `boolean` | `true` | Enable or disable CDN URL processing. |
 | `writeVersionFile` | `boolean` | `true` | Write the generated version file. |
+| `writeConfigToVersionFile` | `boolean` | `false` | Include the resolved configuration under `config` in the version file. |
+| `writePrivateConfigToVersionFile` | `boolean` | `false` | Include top-level `private: true` entries when configuration output is enabled. |
 | `versionFileName` | `string` | `'version.json'` | Version file path relative to the project root. |
 | `upload.enabled` | `boolean` | `false` | Upload static assets after a production build. |
 | `upload.configFile` | `string` | `'awspublish.config.cjs'` | Project-relative S3 configuration file. |
@@ -332,7 +384,13 @@ Existing Nuxt values take precedence by default. Object values are merged with `
 
 ## TypeScript types
 
-The module automatically generates Nuxt type declarations from the active environment file and writes them to Nuxt's `.nuxt` types directory. Fields in the environment configuration therefore receive type hints in `useAppConfig()` and `useRuntimeConfig()` without requiring a duplicate `declare module` declaration in the consuming project.
+The module generates Nuxt declarations for `useAppConfig()` and `useRuntimeConfig()`. It looks for `env.types.ts` in the directory set by `conf.configDir`, which defaults to `config/env` relative to the Nuxt project root.
+
+- If the file exists, export a named interface or type alias called `NuxtConfEnvConfig`. Its field types are used in the generated declarations, so a union such as `'foo' | 'bar'` is retained even if the active environment only sets `'foo'`.
+- If the file is absent, the declarations use `NuxtConfMerge` from `nuxt-conf/core` to infer types from the loaded configuration layers.
+
+The contract file is only used by TypeScript. Configuration values still come from merging the environment files with `defu`.
+The filename `env.types.ts` is reserved for this contract. Projects that previously used `types` as an environment name should rename that environment and its files before upgrading.
 
 Regenerate types:
 
@@ -351,25 +409,26 @@ import type {
 } from 'nuxt-conf'
 ~~~
 
-Extend `NuxtConfConfigObject` for project-specific environment types:
+Define the contract in `config/env/env.types.ts` (or under your custom `conf.configDir`):
 
 ~~~ts
-import type { NuxtConfConfigObject, NuxtConfValue } from 'nuxt-conf'
-
-export interface IEnvConfig extends NuxtConfConfigObject {
+export interface NuxtConfEnvConfig {
   NUXT_APP_ENV: 'development' | 'ft' | 'production'
   NUXT_APP_BASE_API: string
 
-  private?: NuxtConfValue<{
+  private?: {
+    private: true
     token: string
-  }>
+  }
 }
 ~~~
 
-Use the type with the satisfies operator:
+Keep this interface specific to your project. Declare the fields your project uses so TypeScript can catch misspelled keys.
+
+Use `satisfies Partial<NuxtConfEnvConfig>` in each configuration layer to validate the fields it supplies. `Partial` only makes top-level fields optional:
 
 ~~~ts
-import type { IEnvConfig } from '../index'
+import type { NuxtConfEnvConfig } from './env.types'
 
 export default {
   NUXT_APP_ENV: 'development',
@@ -378,7 +437,7 @@ export default {
     private: true,
     token: 'server-only-token',
   },
-} satisfies IEnvConfig
+} satisfies Partial<NuxtConfEnvConfig>
 ~~~
 
 ## Playground

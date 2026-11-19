@@ -1,6 +1,6 @@
 {
   "name": "nuxt-conf",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "description": "Load environment-specific TypeScript configuration into Nuxt appConfig, runtimeConfig, and module options.",
   "keywords": [
     "config",
@@ -42,6 +42,11 @@
     "./version": {
       "types": "./dist/runtime/version.d.ts",
       "default": "./dist/runtime/version.js"
+    },
+    "./core": {
+      "types": "./dist/runtime/core/index.d.ts",
+      "import": "./dist/runtime/core/index.js",
+      "default": "./dist/runtime/core/index.js"
     },
     "./*": [
       "./*",

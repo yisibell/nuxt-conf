@@ -1,4 +1,4 @@
-import type { IEnvConfig } from '../index'
+import type { NuxtConfEnvConfig } from './env.types'
 
 export default {
   NUXT_APP_ENV: 'development',
@@ -17,5 +17,5 @@ export default {
     debug: true,
     routeCache: false,
   },
-
-} satisfies IEnvConfig
+  enumKey: 'bar',
+} satisfies Partial<NuxtConfEnvConfig>

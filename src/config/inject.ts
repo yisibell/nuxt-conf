@@ -7,7 +7,7 @@ import type { NuxtConfConfigObject } from '../types'
 
 /** Options for injecting resolved build values into Nuxt options. */
 export interface InjectResolvedConfigOptions {
-  config: NuxtConfConfigObject
+  config: NuxtConfConfigObject<Record<string, any>>
   metadata: BuildMetadata
   sentryReleasePath: string
   injectRuntimeConfig: boolean

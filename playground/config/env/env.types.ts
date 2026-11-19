@@ -1,10 +1,11 @@
-import type { NuxtConfConfigObject, NuxtConfValue } from '../../src/types'
+import type { NuxtConfValue } from '../../../src/types'
 
-export interface IEnvConfig extends NuxtConfConfigObject {
+export interface NuxtConfEnvConfig {
   NUXT_APP_ENV: 'development' | 'ft' | 'production'
   NUXT_APP_BASE_API: string
+  NUXT_APP_CDN_BASE_URL?: string
   proxy?: {
-    options: unknown
+    options?: unknown
   }
   multiCache?: NuxtConfValue<{
     routeCache?: boolean
@@ -12,4 +13,6 @@ export interface IEnvConfig extends NuxtConfConfigObject {
     apiAuthorization?: string
     debug?: boolean
   }>
+
+  enumKey?: 'foo' | 'bar'
 }

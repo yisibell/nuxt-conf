@@ -10,7 +10,7 @@ export interface ResolvedCdn {
 export const createCdnVersion = (timestamp: number) => hash({ date: timestamp }).toLowerCase().slice(0, 10)
 
 export const resolveCdnUrl = (
-  config: NuxtConfConfigObject,
+  config: NuxtConfConfigObject<Record<string, any>>,
   generatedVersion: string,
 ): ResolvedCdn => {
   const baseUrl = config.NUXT_APP_CDN_BASE_URL

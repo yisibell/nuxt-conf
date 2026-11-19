@@ -43,6 +43,11 @@
       "types": "./dist/runtime/version.d.ts",
       "default": "./dist/runtime/version.js"
     },
+    "./core": {
+      "types": "./dist/runtime/core/index.d.ts",
+      "import": "./dist/runtime/core/index.js",
+      "default": "./dist/runtime/core/index.js"
+    },
     "./*": [
       "./*",
       "./*.d.ts"

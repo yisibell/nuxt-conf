@@ -32,6 +32,8 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
       enabled: true,
     },
     writeVersionFile: true,
+    writeConfigToVersionFile: false,
+    writePrivateConfigToVersionFile: false,
     versionFileName: 'version.json',
     injectSentryRelease: false,
     // Prefer a unique, human-readable release for each build by default.
@@ -63,13 +65,13 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
 
     if (!loaded.config) {
       logger.warn(
-        `[nuxt-conf] No environment config found. Tried ${loaded.configFile} and ${loaded.fallbackFile}. Skipping configuration loading.`,
+        `[nuxt-conf] No environment config found. Tried ${loaded.attemptedFiles.join(', ')}. Skipping configuration loading.`,
       )
       return
     }
 
     // Resolve all build identifiers from one timestamp for cross-integration consistency.
-    const { config, environment, selectedFile } = loaded
+    const { config, environment } = loaded
     const metadata = resolveBuildMetadata(config, {
       rootDir: nuxt.options.rootDir,
       cdnEnabled: options.cdn?.enabled !== false,
@@ -78,15 +80,7 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
       sentryReleaseProject: options.sentryReleaseProject,
     })
 
-    // Persist the build metadata for runtime inspection and S3 upload versioning.
-    if (options.writeVersionFile ?? true) {
-      writeVersionFile(metadata.version, {
-        rootDir: nuxt.options.rootDir,
-        versionFileName: options.versionFileName ?? 'version.json',
-        sentryRelease: metadata.sentryRelease,
-      })
-    }
-
+    const existingRuntimeKeys = new Set(Object.keys(nuxt.options.runtimeConfig))
     // Apply derived CDN, Sentry, appConfig, and runtimeConfig values.
     injectResolvedConfig(nuxt.options, {
       config,
@@ -94,6 +88,19 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
       sentryReleasePath: options.sentryReleasePath!,
       injectRuntimeConfig: options.injectRuntimeConfig !== false,
     })
+    const runtimeConfigKeys = Object.keys(nuxt.options.runtimeConfig)
+      .filter(key => !existingRuntimeKeys.has(key))
+
+    // Persist the fully resolved config and build metadata for runtime inspection and uploads.
+    if (options.writeVersionFile ?? true) {
+      writeVersionFile(metadata.version, {
+        rootDir: nuxt.options.rootDir,
+        versionFileName: options.versionFileName ?? 'version.json',
+        sentryRelease: metadata.sentryRelease,
+        config: options.writeConfigToVersionFile ? config : undefined,
+        includePrivateConfig: options.writePrivateConfigToVersionFile === true,
+      })
+    }
 
     // Apply user-defined source-to-target option mappings.
     applyNuxtOptions(config, {
@@ -103,9 +110,10 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
 
     // Register generated TypeScript declarations after module resolution completes.
     registerConfigTypesHook(nuxt, {
-      selectedFile,
+      configFiles: loaded.configFiles,
+      configTypeFile: loaded.configTypeFile,
       buildDir: nuxt.options.buildDir,
-      injectRuntimeConfig: options.injectRuntimeConfig !== false,
+      runtimeConfigKeys,
     })
 
     if (options.upload?.enabled) {

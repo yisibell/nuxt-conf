@@ -2,8 +2,9 @@ import { existsSync } from 'node:fs'
 import { createJiti } from 'jiti'
 import { createResolver } from '@nuxt/kit'
 import type { NuxtConfConfigObject } from '../types'
+import { mergeEnvConfig } from '../runtime/core'
 
-/** Options for loading the selected environment configuration. */
+/** Options for loading and merging environment configuration layers. */
 export interface LoadEnvironmentConfigOptions {
   rootDir: string
   configDir: string
@@ -11,24 +12,24 @@ export interface LoadEnvironmentConfigOptions {
   defaultEnv: string
 }
 
-/** Result of environment configuration resolution, including attempted paths. */
+/** Resolved configuration and the files that contributed to it. */
 export interface LoadedEnvironmentConfig {
-  config?: NuxtConfConfigObject
+  config?: NuxtConfConfigObject<Record<string, any>>
   environment: string
-  selectedFile: string
-  configFile: string
-  fallbackFile: string
+  attemptedFiles: string[]
+  configFiles: string[]
+  configTypeFile?: string
 }
 
 /**
- * Selects and loads the environment-specific TypeScript configuration.
+ * Loads available local, environment, and default TypeScript configuration layers.
  *
  * @param options Environment selection and project path options.
  * @param options.rootDir Project root directory.
  * @param options.configDir Environment config directory relative to the root.
  * @param options.envVariable Environment selector variable name.
  * @param options.defaultEnv Fallback environment name.
- * @returns Loaded configuration metadata, or attempted paths when no file exists.
+ * @returns The merged configuration and contributing files, or attempted paths when none exist.
  */
 export const loadEnvironmentConfig = async ({
   rootDir,
@@ -38,27 +39,38 @@ export const loadEnvironmentConfig = async ({
 }: LoadEnvironmentConfigOptions): Promise<LoadedEnvironmentConfig> => {
   const resolver = createResolver(rootDir)
   const environment = process.env[envVariable] || defaultEnv
-  const configFile = resolver.resolve(configDir, `env.${environment}.ts`)
-  const fallbackFile = resolver.resolve(configDir, `env.${defaultEnv}.ts`)
-  const selectedFile = existsSync(configFile) ? configFile : fallbackFile
+  const fileFor = (key: string) => ({ key, path: resolver.resolve(configDir, `env.${key}.ts`) })
+  const typeFile = fileFor('types').path
+  const environmentFiles = [`${environment}.local`, environment, `${environment}.default`]
+    .filter(key => key !== 'types')
+    .map(fileFor)
+  const hasEnvironmentFiles = environmentFiles.some(({ path }) => existsSync(path))
+  const configEnvironment = hasEnvironmentFiles ? environment : defaultEnv
+  const keys = [`${configEnvironment}.local`, 'local', configEnvironment, `${configEnvironment}.default`, 'default']
+  const files = [...new Set(keys)].filter(key => key !== 'types').map(fileFor)
+  const configFiles = files.filter(({ path }) => existsSync(path))
+  const attemptedFiles = [...new Set([...environmentFiles, ...files].map(({ path }) => path))]
 
-  if (!existsSync(selectedFile)) {
+  if (!configFiles.length) {
     return {
       environment,
-      selectedFile,
-      configFile,
-      fallbackFile,
+      attemptedFiles,
+      configFiles: [],
     }
   }
 
   const jiti = createJiti(rootDir)
-  const config = await jiti.import<NuxtConfConfigObject>(selectedFile, { default: true })
+  const configs: Record<string, NuxtConfConfigObject<Record<string, any>>> = {}
+  for (const { key, path } of configFiles) {
+    configs[key] = await jiti.import<NuxtConfConfigObject<Record<string, any>>>(path, { default: true })
+  }
+  const config = mergeEnvConfig(configEnvironment, configs)
 
   return {
     config,
     environment,
-    selectedFile,
-    configFile,
-    fallbackFile,
+    attemptedFiles,
+    configFiles: configFiles.map(({ path }) => path),
+    configTypeFile: existsSync(typeFile) ? typeFile : undefined,
   }
 }

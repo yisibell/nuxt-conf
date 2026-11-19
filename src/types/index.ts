@@ -91,6 +91,10 @@ export interface NuxtConfModuleOptions {
   }
   /** Whether to write the generated version file. Defaults to true. */
   writeVersionFile?: boolean
+  /** Whether to include the resolved configuration under `config` in the version file. Defaults to false. */
+  writeConfigToVersionFile?: boolean
+  /** Whether to include top-level `private: true` config entries when writing config to the version file. Defaults to false. */
+  writePrivateConfigToVersionFile?: boolean
   /** Version file name written to the project root. Defaults to version.json. */
   versionFileName?: string
   /** Inject a generated Sentry release into nuxt.options.sentry.release.name. Defaults to false. */

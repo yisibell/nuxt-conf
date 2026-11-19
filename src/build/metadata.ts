@@ -34,7 +34,7 @@ export interface ResolveBuildMetadataOptions {
  * @returns Consistent build metadata derived from one timestamp.
  */
 export const resolveBuildMetadata = (
-  config: NuxtConfConfigObject,
+  config: NuxtConfConfigObject<Record<string, any>>,
   {
     rootDir,
     cdnEnabled,

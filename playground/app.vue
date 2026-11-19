@@ -25,6 +25,8 @@ import PlaygroundResolvedValues from './components/PlaygroundResolvedValues.vue'
 const appConfig = useAppConfig()
 const appConfigText = computed(() => JSON.stringify(appConfig, null, 2))
 
+console.log(appConfig.enumKey, appConfig.job_host_name)
+
 if (import.meta.dev) {
   console.log(`[playground][${import.meta.server ? 'server' : 'client'}] appConfig:`, appConfig)
 }

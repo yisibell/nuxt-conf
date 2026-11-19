@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v3.1.0
+
+[compare changes](https://github.com/yisibell/nuxt-conf/compare/v3.0.3...v3.1.0)
+
+### 🚀 Enhancements
+
+- Support layered env configs and version snapshots ([cea3768](https://github.com/yisibell/nuxt-conf/commit/cea3768))
+
+### 🏡 Chore
+
+- **docs:** Update readme ([36fa0c8](https://github.com/yisibell/nuxt-conf/commit/36fa0c8))
+
+### ❤️ Contributors
+
+- Wenqing <wenqing@kerrylan.com>
+
 ## v3.0.3
 
 [compare changes](https://github.com/yisibell/nuxt-conf/compare/v3.0.2...v3.0.3)

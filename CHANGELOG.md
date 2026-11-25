@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v3.2.0
+
+[compare changes](https://github.com/yisibell/nuxt-conf/compare/v3.1.0...v3.2.0)
+
+### 🚀 Enhancements
+
+- Supports upload to s3 concurrently ([4fc0c06](https://github.com/yisibell/nuxt-conf/commit/4fc0c06))
+
+### ❤️ Contributors
+
+- Wenqing <wenqing@kerrylan.com>
+
 ## v3.1.0
 
 [compare changes](https://github.com/yisibell/nuxt-conf/compare/v3.0.3...v3.1.0)

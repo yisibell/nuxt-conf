@@ -1,26 +1,5 @@
-import { existsSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
-import gulp from 'gulp'
-import awspublish from 'gulp-awspublish'
-import rename from 'gulp-rename'
-import type {
-  NuxtConfS3Config,
-  NuxtConfUploadOptions,
-  NuxtConfUploadState,
-} from '../types'
-import { loadVersionFile } from '../runtime/version'
-
-type Publisher = ReturnType<typeof awspublish.create>
-
-const defaultReporterStates: NuxtConfUploadState[] = [
-  'create',
-  'update',
-  'put',
-  'skip',
-  'cache',
-  'delete',
-]
+import { uploadToS3 } from '../runtime/upload/s3'
+import type { NuxtConfUploadOptions } from '../types'
 
 interface UploadBuildContext {
   rootDir: string
@@ -30,113 +9,33 @@ interface UploadBuildContext {
   versionFileName: string
 }
 
-interface LoadConfigFileOptions {
-  rootDir: string
-  environment: string
-}
-
-const loadConfigFile = async (
-  configFile: string,
-  { rootDir, environment }: LoadConfigFileOptions,
-) => {
-  // Keep deployment credentials in the project-provided config file rather than Nuxt runtime config.
-  const configPath = resolve(rootDir, configFile)
-
-  if (!existsSync(configPath)) {
-    throw new Error(`S3 configuration file does not exist: ${configPath}`)
-  }
-
-  const imported = await import(pathToFileURL(configPath).href)
-  const configs = imported.default ?? imported
-  // Support both CommonJS module.exports and ESM export default config files.
-  const config = configs[environment] as NuxtConfS3Config | undefined
-
-  if (!config) {
-    throw new Error(`Environment [${environment}] is missing from the S3 configuration file`)
-  }
-
-  return config
-}
-
-const createPublisher = (config: NuxtConfS3Config): Publisher => {
-  if (!config.region) {
-    throw new Error('S3 region is not configured')
-  }
-
-  if (!config.bucket) {
-    throw new Error('S3 bucket is not configured')
-  }
-
-  // Omit explicit credentials when they are not supplied so awspublish can use the AWS credential chain.
-  const credentials = config.accessKeyId && config.secretAccessKey
-    ? {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
-      }
-    : undefined
-
-  return awspublish.create({
-    region: config.region,
-    params: { Bucket: config.bucket },
-    credentials,
-  })
-}
-
-export async function uploadBuildOutput({
+/** Uploads the versioned public assets with Nuxt's S3 defaults. */
+export async function uploadBuildOutputToS3({
   rootDir,
   environment,
   upload,
   outputDir,
   versionFileName,
-}: UploadBuildContext) {
-  const config = await loadConfigFile(upload.configFile ?? 'awspublish.config.cjs', {
+}: UploadBuildContext): Promise<void> {
+  await uploadToS3({
     rootDir,
     environment,
-  })
-
-  if (!config.enabled) {
-    return
-  }
-
-  const sourceDir = resolve(outputDir)
-  const { version } = loadVersionFile(versionFileName, { rootDir })
-  const publisher = createPublisher(config)
-  const keyPrefix = upload.keyPrefix ?? 'nuxt/pc'
-  const publishHeaders = {
-    'Cache-Control': 'max-age=315360000, public',
-    'x-amz-acl': 'public-read',
-    ...upload.publish?.headers,
-  }
-  const publishOptions = {
-    force: true,
-    ...upload.publish?.options,
-  }
-
-  if (!existsSync(sourceDir)) {
-    throw new Error(`Build output directory does not exist: ${sourceDir}`)
-  }
-
-  await new Promise<void>((resolveUpload, rejectUpload) => {
-    // Rewrite each local file into a versioned, environment-specific S3 key.
-    let uploadStream = gulp
-      .src(join(sourceDir, '**/*'), {
-        base: sourceDir,
-        encoding: false,
-      })
-      .pipe(rename((filePath) => {
-        filePath.dirname = `${keyPrefix}/${environment}/${version}/${filePath.dirname}`
-      }))
-      // Upload files through the existing awspublish pipeline without concurrency for now.
-      .pipe(publisher.publish(publishHeaders, publishOptions))
-
-    if (upload.reporter !== false) {
-      uploadStream = uploadStream.pipe(awspublish.reporter({
-        states: upload.reporter?.states ?? defaultReporterStates,
-      }))
-    }
-
-    uploadStream
-      .on('error', rejectUpload)
-      .on('end', resolveUpload)
+    sourceDir: outputDir,
+    configFile: upload.configFile,
+    versionFileName,
+    keyPrefix: upload.keyPrefix ?? 'nuxt/pc',
+    concurrency: upload.concurrency,
+    reporter: upload.reporter,
+    publish: {
+      headers: {
+        'Cache-Control': 'max-age=315360000, public',
+        'x-amz-acl': 'public-read',
+        ...upload.publish?.headers,
+      },
+      options: {
+        force: true,
+        ...upload.publish?.options,
+      },
+    },
   })
 }

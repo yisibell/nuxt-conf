@@ -1,1 +1,38 @@
-{"version":"28_i08bvv6","sentryRelease":"my-module-playground@2026.11.19+1795068718042","config":{"NUXT_APP_ENV":"development","NUXT_APP_BASE_API":"/api","proxy":{"options":[{"target":"https://jsonplaceholder.typicode.com","pathRewrite":{"/api3":""},"pathFilter":["/api3/**"]},{"target":"https://jsonplaceholder.typicode.com","pathRewrite":{"/api2":""},"pathFilter":["/api2/**"]}]},"multiCache":{"private":true,"debug":true,"routeCache":false},"enumKey":"bar","NUXT_APP_CDN_VERSION":"28_i08bvv6","NUXT_APP_SENTRY_RELEASE":"my-module-playground@2026.11.19+1795068718042"}}
+{
+  "version": "28_i08bvv6",
+  "sentryRelease": "my-module-playground@2026.11.19+1795068718042",
+  "config": {
+    "NUXT_APP_ENV": "development",
+    "NUXT_APP_BASE_API": "/api",
+    "proxy": {
+      "options": [
+        {
+          "target": "https://jsonplaceholder.typicode.com",
+          "pathRewrite": {
+            "/api3": ""
+          },
+          "pathFilter": [
+            "/api3/**"
+          ]
+        },
+        {
+          "target": "https://jsonplaceholder.typicode.com",
+          "pathRewrite": {
+            "/api2": ""
+          },
+          "pathFilter": [
+            "/api2/**"
+          ]
+        }
+      ]
+    },
+    "multiCache": {
+      "private": true,
+      "debug": true,
+      "routeCache": false
+    },
+    "enumKey": "bar",
+    "NUXT_APP_CDN_VERSION": "28_i08bvv6",
+    "NUXT_APP_SENTRY_RELEASE": "my-module-playground@2026.11.19+1795068718042"
+  }
+}

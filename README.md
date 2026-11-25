@@ -269,7 +269,7 @@ When S3 upload is enabled, `writeVersionFile` must remain enabled because the up
 
 ## S3 static asset upload
 
-`nuxt-conf` can upload the generated `.output/public` files to S3 after a production build. The feature is disabled by default and reads the selected environment from a project-level `awspublish.config.cjs`, matching the configuration format used by `gulp-awspublish`.
+`nuxt-conf` can upload the generated `.output/public` files to S3 after Nitro writes its production output. The feature is disabled by default and reads the selected environment from a project-level `awspublish.config.cjs`, matching the configuration format used by `gulp-awspublish`.
 
 ~~~ts
 export default defineNuxtConfig({
@@ -279,6 +279,7 @@ export default defineNuxtConfig({
         enabled: true,
         configFile: 'awspublish.config.cjs',
         keyPrefix: 'nuxt/pc',
+        concurrency: 10,
         reporter: {
           states: ['create', 'update', 'put'],
         },
@@ -299,6 +300,8 @@ export default defineNuxtConfig({
 
 The upload directory defaults to Nitro's `output.publicDir` (normally `.output/public`). Set `outputDir` only when a project uses a custom output directory. A Nuxt Loading indicator is shown while the S3 upload is running and is replaced by a success or failure message when it finishes.
 
+S3 uploads use `object-transform-pool` and require Node.js 22 or later. `upload.concurrency` defaults to `10`. Set it to `1` to process files sequentially. The build waits for the entire upload pipeline and fails if any upload fails.
+
 The reporter prints all upload states by default. Use `reporter.states` to select specific states, or set `reporter: false` to disable per-file output while keeping the overall upload Loading indicator.
 
 The configuration file uses one entry per environment:
@@ -315,7 +318,43 @@ module.exports = {
 }
 ~~~
 
-With `NUXT_APP_ENV=p`, files are uploaded to `nuxt/pc/p/<version>/...`. The version is read from the generated version file. Uploading runs from Nuxt's `build:done` hook and is skipped during development. The current implementation preserves the existing `gulp-awspublish` behavior, including `public-read`, long-lived caching, and forced upload. `writeVersionFile` must remain enabled when S3 upload is enabled.
+With `NUXT_APP_ENV=p`, files are uploaded to `nuxt/pc/p/<version>/...`. The version is read from the generated version file. Uploading runs in Nitro's `compiled` hook and is skipped during development. The current implementation preserves the existing `gulp-awspublish` behavior, including `public-read`, long-lived caching, and forced upload. `writeVersionFile` must remain enabled when S3 upload is enabled.
+
+### Upload from a Node.js script
+
+Use `uploadToS3` to upload any local directory from a Node.js script. Supply the
+bucket and region directly. The function preserves relative file paths under
+the optional `keyPrefix`, and uses the AWS SDK credential chain when
+`credentials` is omitted. This example simulates the upload.
+
+~~~ts
+import { uploadToS3 } from 'nuxt-conf/upload/s3'
+
+await uploadToS3({
+  sourceDir: './.output/public',
+  region: 'us-east-1',
+  bucket: 'example-bucket',
+  keyPrefix: 'static',
+  concurrency: 5,
+  publish: { options: { simulate: true } },
+})
+~~~
+
+To reuse the project files, pass `environment` in place of `region` and `bucket`.
+The function reads `awspublish.config.cjs` and `version.json` from `rootDir`
+(the current working directory by default). It skips environments without
+`enabled: true` and writes keys under `<keyPrefix>/<environment>/<version>/`.
+The prefix is optional. Use `configFile` or `versionFileName` to override the
+file paths.
+
+~~~ts
+await uploadToS3({
+  sourceDir: '.output/public',
+  environment: 'p',
+  keyPrefix: 'nuxt/pc',
+  publish: { options: { simulate: true } },
+})
+~~~
 
 ## Nuxt option mapping
 
@@ -372,10 +411,11 @@ Existing Nuxt values take precedence by default. Object values are merged with `
 | `writeConfigToVersionFile` | `boolean` | `false` | Include the resolved configuration under `config` in the version file. |
 | `writePrivateConfigToVersionFile` | `boolean` | `false` | Include top-level `private: true` entries when configuration output is enabled. |
 | `versionFileName` | `string` | `'version.json'` | Version file path relative to the project root. |
-| `upload.enabled` | `boolean` | `false` | Upload static assets after a production build. |
+| `upload.enabled` | `boolean` | `false` | Upload static assets after Nitro writes its production output. |
 | `upload.configFile` | `string` | `'awspublish.config.cjs'` | Project-relative S3 configuration file. |
 | `upload.outputDir` | `string` | Nitro `output.publicDir` | Override the Nuxt public build output directory. |
 | `upload.keyPrefix` | `string` | `'nuxt/pc'` | Prefix used in the generated S3 object key. |
+| `upload.concurrency` | `number` | `10` | Maximum number of concurrent file operations. Must be a positive integer. |
 | `upload.reporter` | `false \| object` | All states | Configure or disable per-file upload status output. |
 | `upload.reporter.states` | `NuxtConfUploadState[]` | All states | States printed by the upload reporter. |
 | `upload.publish.headers` | `Record<string, string>` | Built-in headers | Additional headers passed to `gulp-awspublish`. |

@@ -26,6 +26,9 @@ importers:
       lodash-es:
         specifier: ^4.18.1
         version: 4.18.1
+      object-transform-pool:
+        specifier: ^1.1.0
+        version: 1.1.0
       ohash:
         specifier: ^2.0.12
         version: 2.0.12
@@ -3875,6 +3878,10 @@ packages:
   object-deep-merge@2.0.1:
     resolution: {integrity: sha512-aKttDKcU3pyZqKcCkDhsMn70WmZFG2JGDQLP9EcLyTSIFQRCPWLAmBZRLJnrVUrhPG1jETEEbfdgbNtJf1LyMg==}
 
+  object-transform-pool@1.1.0:
+    resolution: {integrity: sha512-LF0GeJW1ply2/M9++y9yacyDvoZ/jwUV/hWSc5nKOwqtjA76Xqxxu6dByidRyQ/s+5jk2NCWRLmZklpZDo+9kg==}
+    engines: {node: '>=22'}
+
   object.defaults@1.1.0:
     resolution: {integrity: sha512-c/K0mw/F11k4dEUBMW8naXUuBuhxRCfG7W+yFy8EcijU/rSmazOUd1XAEEe6bC0OuXY4HUKjTJv7xbxIMqdxrA==}
     engines: {node: '>=0.10.0'}
@@ -4632,6 +4639,9 @@ packages:
 
   stream-exhaust@1.0.2:
     resolution: {integrity: sha512-b/qaq/GlBK5xaq1yrK9/zFcyRSTNxmcZwFLGSTG0mXgZl/4Z6GgiyYOXOvY7N3eEvFRAG1bkDRz5EPGSvPYQlw==}
+
+  stream-transform@3.6.0:
+    resolution: {integrity: sha512-iDtH6HV1MOQ3Ipva+9g/kke1uVLubZlEbGCxbWWlI+Ak++sDRQRxmPZ1iXlmXdLK6kP5fIziUf79GBB7erbppQ==}
 
   streamx@2.28.0:
     resolution: {integrity: sha512-1Yowhzjf0ivGMrTIkY9hav5TxobO9qIVqUE41fiCGMGgc3CLlf4MY+9AHmZqBWgDTue0fY9zWjYFVyf6Diuobw==}
@@ -9794,6 +9804,10 @@ snapshots:
 
   object-deep-merge@2.0.1: {}
 
+  object-transform-pool@1.1.0:
+    dependencies:
+      stream-transform: 3.6.0
+
   object.defaults@1.1.0:
     dependencies:
       array-each: 1.0.1
@@ -10565,6 +10579,8 @@ snapshots:
       - react-native-b4a
 
   stream-exhaust@1.0.2: {}
+
+  stream-transform@3.6.0: {}
 
   streamx@2.28.0:
     dependencies:

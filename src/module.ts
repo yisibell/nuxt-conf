@@ -117,12 +117,10 @@ export default defineNuxtModule<NuxtConfModuleOptions>({
     })
 
     if (options.upload?.enabled) {
-      // Register production asset upload after Nitro finishes its build output.
       registerUploadHook(nuxt, {
         environment,
         upload: options.upload,
         rootDir: nuxt.options.rootDir,
-        outputDir: nuxt.options.nitro?.output?.publicDir ?? '',
         versionFileName: options.versionFileName ?? 'version.json',
       })
     }

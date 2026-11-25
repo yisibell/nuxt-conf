@@ -1,3 +1,20 @@
+import type { S3UploadOptions } from '../runtime/upload/types'
+
+export type {
+  NuxtConfS3Config,
+  S3UploadReporterOptions as NuxtConfUploadReporterOptions,
+  S3UploadState as NuxtConfUploadState,
+} from '../runtime/upload/types'
+
+export interface NuxtConfUploadOptions extends Pick<S3UploadOptions, 'keyPrefix' | 'concurrency' | 'reporter' | 'publish'> {
+  /** Upload after Nitro writes its production output. Defaults to false. */
+  enabled?: boolean
+  /** Project-relative awspublish configuration file. */
+  configFile?: string
+  /** Optional project-relative Nuxt build output directory override. */
+  outputDir?: string
+}
+
 /**
  * Base configuration shape consumed by nuxt-conf.
  *
@@ -21,52 +38,6 @@ export interface NuxtConfOptionMapping {
   from: string
   /** Whether the mapped value should replace an existing Nuxt option. */
   override?: boolean
-}
-
-/** Configuration loaded from awspublish.config.cjs for a selected environment. */
-export interface NuxtConfS3Config {
-  enabled?: boolean
-  region?: string
-  bucket?: string
-  accessKeyId?: string
-  secretAccessKey?: string
-}
-
-/** Options for publishing the Nuxt public build output to S3. */
-export type NuxtConfUploadState = 'create' | 'update' | 'put' | 'skip' | 'cache' | 'delete'
-
-export interface NuxtConfUploadReporterOptions {
-  /** States printed by gulp-awspublish's reporter. */
-  states?: NuxtConfUploadState[]
-}
-
-export interface NuxtConfUploadOptions {
-  /** Enable the post-build upload. Defaults to false. */
-  enabled?: boolean
-  /** Project-relative awspublish configuration file. */
-  configFile?: string
-  /** Optional project-relative Nuxt build output directory override. */
-  outputDir?: string
-  /** Prefix used before the environment and version path. */
-  keyPrefix?: string
-  /** Configure per-file upload state output. Set to false to disable it. */
-  reporter?: false | NuxtConfUploadReporterOptions
-  /** Arguments passed to gulp-awspublish's publisher.publish(headers, options). */
-  publish?: {
-    /** Additional S3 object headers applied to every uploaded file. */
-    headers?: Record<string, string>
-    /** Controls how files are compared and written to S3. */
-    options?: {
-      /** Upload the file even when its content matches the remote object. */
-      force?: boolean
-      /** Skip the remote HEAD check and write the object directly. */
-      putOnly?: boolean
-      /** Process files without sending write requests to S3. */
-      simulate?: boolean
-      /** Create missing objects but do not update existing objects. */
-      createOnly?: boolean
-    }
-  }
 }
 
 /** A configuration object that can be marked as private at runtime. */
